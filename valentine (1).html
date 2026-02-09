@@ -1,0 +1,480 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Verification Required</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif;
+            background: #f5f5f5;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .captcha-container {
+            background: white;
+            border: 1px solid #d3d3d3;
+            border-radius: 4px;
+            padding: 20px;
+            max-width: 400px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .captcha-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .checkbox-container {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 15px;
+            border: 2px solid #d3d3d3;
+            border-radius: 3px;
+            cursor: pointer;
+            transition: border-color 0.3s;
+        }
+
+        .checkbox-container:hover {
+            border-color: #4285f4;
+        }
+
+        .checkbox {
+            width: 28px;
+            height: 28px;
+            border: 2px solid #d3d3d3;
+            border-radius: 3px;
+            cursor: pointer;
+            position: relative;
+            background: white;
+        }
+
+        .checkbox.checked::after {
+            content: '✓';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: #4285f4;
+            font-size: 20px;
+            font-weight: bold;
+        }
+
+        .captcha-text {
+            font-size: 14px;
+            color: #333;
+        }
+
+        .recaptcha-logo {
+            font-size: 10px;
+            color: #9e9e9e;
+            margin-top: 10px;
+        }
+
+        .image-grid {
+            display: none;
+            margin-top: 20px;
+        }
+
+        .grid-header {
+            font-size: 14px;
+            font-weight: 500;
+            margin-bottom: 15px;
+            color: #333;
+        }
+
+        .images {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 8px;
+            margin-bottom: 15px;
+        }
+
+        .image-box {
+            aspect-ratio: 1;
+            border: 3px solid transparent;
+            cursor: pointer;
+            overflow: hidden;
+            background: #f0f0f0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            color: #666;
+            transition: border-color 0.3s;
+            position: relative;
+        }
+
+        .image-box img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            object-position: center;
+        }
+
+        .image-box:hover {
+            border-color: #4285f4;
+        }
+
+        .image-box.selected {
+            border-color: #4285f4;
+            background: rgba(66, 133, 244, 0.1);
+        }
+
+        .verify-btn {
+            width: 100%;
+            padding: 12px;
+            background: #4285f4;
+            color: white;
+            border: none;
+            border-radius: 3px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+
+        .verify-btn:hover {
+            background: #357ae8;
+        }
+
+        .verify-btn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+
+        .valentine-reveal {
+            display: none;
+            text-align: center;
+            padding: 40px 20px;
+        }
+
+        .valentine-reveal h1 {
+            font-size: 32px;
+            color: #e91e63;
+            margin-bottom: 30px;
+            animation: fadeInDown 0.8s;
+        }
+
+        .valentine-buttons {
+            display: flex;
+            gap: 20px;
+            justify-content: center;
+        }
+
+        .valentine-btn {
+            padding: 15px 40px;
+            font-size: 18px;
+            border: none;
+            border-radius: 25px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+
+        .yes-btn {
+            background: linear-gradient(135deg, #e91e63, #ff6090);
+            color: white;
+        }
+
+        .no-btn {
+            background: #f5f5f5;
+            color: #666;
+        }
+
+        .valentine-btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+
+        .heart-animation {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, #ff6090, #e91e63);
+            z-index: 1000;
+            overflow: hidden;
+        }
+
+        .heart {
+            position: absolute;
+            font-size: 40px;
+            animation: float 4s ease-in-out infinite;
+            opacity: 0;
+        }
+
+        .success-message {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+            color: white;
+            z-index: 1001;
+            max-width: 90%;
+        }
+
+        .success-message h1 {
+            font-size: 48px;
+            margin-bottom: 20px;
+            animation: pulse 1.5s ease-in-out infinite;
+        }
+
+        .success-message p {
+            font-size: 24px;
+            opacity: 0.9;
+        }
+
+        .success-message img {
+            max-width: 400px;
+            width: 100%;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            margin-bottom: 25px;
+            margin-top: 20px;
+        }
+
+        .success-message .location-info {
+            font-size: 20px;
+            font-weight: 600;
+            background: rgba(255,255,255,0.2);
+            padding: 20px;
+            border-radius: 10px;
+            backdrop-filter: blur(10px);
+        }
+
+        @keyframes fadeInDown {
+            from {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes float {
+            0% {
+                transform: translateY(100vh) rotate(0deg);
+                opacity: 0;
+            }
+            10% {
+                opacity: 1;
+            }
+            90% {
+                opacity: 1;
+            }
+            100% {
+                transform: translateY(-100vh) rotate(360deg);
+                opacity: 0;
+            }
+        }
+
+        @keyframes pulse {
+            0%, 100% {
+                transform: scale(1);
+            }
+            50% {
+                transform: scale(1.05);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="captcha-container">
+        <div class="captcha-header">
+            <div class="checkbox-container" id="initialCheckbox">
+                <div class="checkbox" id="checkbox"></div>
+                <div class="captcha-text">I'm not a robot</div>
+            </div>
+        </div>
+        <div class="recaptcha-logo">
+            reCAPTCHA
+        </div>
+
+        <div class="image-grid" id="imageGrid">
+            <div class="grid-header">
+                Select all images with <strong>the best person ever</strong>
+            </div>
+            <div class="images" id="imageContainer">
+                <!-- 9 image boxes will be created here -->
+            </div>
+            <button class="verify-btn" id="verifyBtn" disabled>Verify</button>
+        </div>
+
+        <div class="valentine-reveal" id="valentineReveal">
+            <h1>💕 Will you be my Valentine? 💕</h1>
+            <div class="valentine-buttons">
+                <button class="valentine-btn yes-btn" id="yesBtn">Yes! 💖</button>
+                <button class="valentine-btn no-btn" id="noBtn">No</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="heart-animation" id="heartAnimation">
+        <div class="success-message">
+            <h1>❤️ Yay! ❤️</h1>
+            <img src="roses.jpg" alt="Roses" id="rosesImage">
+            <div class="location-info">
+                🌹 Your roses are ready at<br>
+                <strong>Borgo San Frediano, 175 R</strong><br>
+                Tomorrow morning
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const checkbox = document.getElementById('checkbox');
+        const initialCheckbox = document.getElementById('initialCheckbox');
+        const imageGrid = document.getElementById('imageGrid');
+        const imageContainer = document.getElementById('imageContainer');
+        const verifyBtn = document.getElementById('verifyBtn');
+        const valentineReveal = document.getElementById('valentineReveal');
+        const captchaContainer = document.querySelector('.captcha-container');
+        const yesBtn = document.getElementById('yesBtn');
+        const noBtn = document.getElementById('noBtn');
+        const heartAnimation = document.getElementById('heartAnimation');
+
+        // Her photos - you'll upload these as img1.jpg through img9.jpg
+        const coupleImages = [
+            'img1.jpg',
+            'img2.jpg',
+            'img3.jpg',
+            'img4.jpg',
+            'img5.jpg',
+            'img6.jpg',
+            'img7.jpg',
+            'img8.jpg',
+            'img9.jpg'
+        ];
+
+        const distractorImages = [
+            // No distractor images needed
+        ];
+
+        let selectedImages = new Set();
+        let imageElements = [];
+
+        // Initial checkbox click
+        initialCheckbox.addEventListener('click', () => {
+            checkbox.classList.add('checked');
+            setTimeout(() => {
+                imageGrid.style.display = 'block';
+                createImageGrid();
+            }, 500);
+        });
+
+        function createImageGrid() {
+            // Use only couple images (5 total)
+            const allImages = [...coupleImages];
+            const shuffled = allImages.sort(() => Math.random() - 0.5);
+
+            shuffled.forEach((imgSrc, index) => {
+                const box = document.createElement('div');
+                box.className = 'image-box';
+                
+                const img = document.createElement('img');
+                img.src = imgSrc;
+                img.alt = 'Us';
+                box.appendChild(img);
+                
+                box.dataset.index = index;
+                box.dataset.isCouple = 'true'; // All images are couple images
+
+                box.addEventListener('click', () => toggleImage(box));
+                imageContainer.appendChild(box);
+                imageElements.push(box);
+            });
+        }
+
+        function toggleImage(box) {
+            const index = box.dataset.index;
+            if (selectedImages.has(index)) {
+                selectedImages.delete(index);
+                box.classList.remove('selected');
+            } else {
+                selectedImages.add(index);
+                box.classList.add('selected');
+            }
+            updateVerifyButton();
+        }
+
+        function updateVerifyButton() {
+            verifyBtn.disabled = selectedImages.size === 0;
+        }
+
+        verifyBtn.addEventListener('click', () => {
+            // For now, just proceed to the Valentine reveal
+            // (Since we're using placeholders, we'll skip validation)
+            imageGrid.style.display = 'none';
+            valentineReveal.style.display = 'block';
+            
+            /* Uncomment this validation once you add real photos:
+            const allCoupleSelected = imageElements.every(box => {
+                const isSelected = selectedImages.has(box.dataset.index);
+                const isCouple = box.dataset.isCouple === 'true';
+                return isCouple ? isSelected : !isSelected;
+            });
+
+            if (allCoupleSelected) {
+                imageGrid.style.display = 'none';
+                valentineReveal.style.display = 'block';
+            } else {
+                alert('Oops! Try again - select all the images with us together! 💑');
+                selectedImages.clear();
+                imageElements.forEach(box => box.classList.remove('selected'));
+                updateVerifyButton();
+            }
+            */
+        });
+
+        yesBtn.addEventListener('click', () => {
+            captchaContainer.style.display = 'none';
+            heartAnimation.style.display = 'block';
+            createHearts();
+        });
+
+        noBtn.addEventListener('click', () => {
+            // Make the No button run away!
+            const btn = noBtn;
+            const maxX = window.innerWidth - btn.offsetWidth - 40;
+            const maxY = window.innerHeight - btn.offsetHeight - 40;
+            
+            btn.style.position = 'fixed';
+            btn.style.left = Math.random() * maxX + 'px';
+            btn.style.top = Math.random() * maxY + 'px';
+        });
+
+        function createHearts() {
+            for (let i = 0; i < 30; i++) {
+                setTimeout(() => {
+                    const heart = document.createElement('div');
+                    heart.className = 'heart';
+                    heart.textContent = ['❤️', '💕', '💖', '💗', '💓', '💝'][Math.floor(Math.random() * 6)];
+                    heart.style.left = Math.random() * 100 + '%';
+                    heart.style.animationDelay = Math.random() * 2 + 's';
+                    heart.style.animationDuration = (3 + Math.random() * 2) + 's';
+                    heartAnimation.appendChild(heart);
+                }, i * 100);
+            }
+        }
+    </script>
+</body>
+</html>
